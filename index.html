@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Strato-Tracker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem;
+      background: #0b1220;
+      color: #f9fafb;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .scoreboard {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      background: #111827;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+    }
+    .team {
+      text-align: center;
+      flex: 1;
+    }
+    .team h2 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.1rem;
+    }
+    .score {
+      font-size: 2rem;
+      margin-bottom: 0.25rem;
+    }
+    .score-buttons button {
+      margin: 0 0.1rem;
+    }
+    .game-info {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .game-info > div {
+      flex: 1;
+      background: #111827;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .field-container {
+      background: #065f46;
+      border-radius: 8px;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .field {
+      position: relative;
+      height: 120px;
+      background: repeating-linear-gradient(
+        to right,
+        #047857,
+        #047857 5%,
+        #064e3b 5%,
+        #064e3b 10%
+      );
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .yard-labels {
+      position: absolute;
+      top: 4px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #d1fae5;
+    }
+    .ball-marker {
+      position: absolute;
+      top: 35px;
+      width: 12px;
+      height: 50px;
+      background: #fbbf24;
+      border-radius: 4px;
+      transform: translateX(-50%);
+      border: 2px solid #92400e;
+    }
+    /* Line to gain marker (blue) */
+    #ltgMarker {
+      background: #3b82f6;
+      border-color: #1d4ed8;
+      height: 40px;
+      top: 40px;
+    }
+    .endzone {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4%;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: #e5e7eb;
+      text-transform: uppercase;
+    }
+    .endzone.left { left: 0; }
+    .endzone.right { right: 0; }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .controls > div {
+      flex: 1;
+      min-width: 220px;
+      background: #111827;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .controls label {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .controls input {
+      width: 5rem;
+      padding: 0.1rem 0.2rem;
+      margin-right: 0.25rem;
+    }
+    button {
+      cursor: pointer;
+      padding: 0.15rem 0.4rem;
+      font-size: 0.85rem;
+    }
+    .small {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .clock-container {
+      margin-top: 0.4rem;
+      font-size: 0.9rem;
+    }
+    .clock-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+    }
+    .timeouts {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+    }
+    .timeouts span {
+      margin-right: 0.4rem;
+    }
+
+
+
+    .field-container {
+  display: flex;
+  align-items: stretch;
+  background: #065f46;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Endzones as fixed-width side strips */
+.endzone-strip {
+  width: 40px;              /* visual endzone width */
+  background: rgba(15,23,42,0.85);
+  color: #e5e7eb;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.left-ez {
+  margin-right: 4px;
+}
+
+.right-ez {
+  margin-left: 4px;
+}
+
+/* Playable field: 100 yards = 0–100% here */
+.field {
+  position: relative;
+  flex: 1;
+  height: 120px;
+  background: repeating-linear-gradient(
+    to right,
+    #047857 0,
+    #047857 5%,
+    #064e3b 5%,
+    #064e3b 10%
+  );
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Yard labels and markers stay as before */
+.yard-labels {
+  position: absolute;
+  top: 4px;
+  width: 100%;
+  font-size: 0.7rem;
+  color: #d1fae5;
+  pointer-events: none;
+}
+.yard-labels span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.ball-marker {
+  position: absolute;
+  top: 35px;
+  width: 12px;
+  height: 50px;
+  background: #fbbf24;
+  border-radius: 4px;
+  transform: translateX(-50%);
+  border: 2px solid #92400e;
+}
+#ltgMarker {
+  background: #3b82f6;
+  border-color: #1d4ed8;
+  height: 40px;
+  top: 40px;
+}
+
+.possession-indicator {
+  font-size: 0.9rem;
+  margin-left: 0.25rem;
+  opacity: 0.2;          /* dim when not in possession */
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.possession-indicator.active {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+
+
+  </style>
+</head>
+
+<dialog id="quarterDialog">
+  <form method="dialog" style="background:#111827;color:#f9fafb;
+       padding:1rem 1.25rem;border-radius:8px;min-width:220px;
+       border:1px solid #374151;">
+    <p id="quarterDialogText" style="margin:0 0 0.75rem 0;">
+      End of Quarter
+    </p>
+    <div style="text-align:right;">
+      <button value="ok">Continue</button>
+    </div>
+  </form>
+</dialog>
+
+<body>
+  <h1>Strato-Tracker</h1>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard">
+    <div class="team">
+      <h2>Home
+        <span id="homePossession" class="possession-indicator">🏈</span>
+      </h2>
+      <div id="homeScore" class="score">0</div>
+      <div class="score-buttons">
+        <button onclick="addPoints('home', 1)">+1</button>
+        <button onclick="addPoints('home', 2)">+2</button>
+        <button onclick="addPoints('home', 3)">+3</button>
+        <button onclick="addPoints('home', 6)">+6</button>
+        <button onclick="addPoints('home', -1)">-1</button>
+      </div>
+    </div>
+    <div class="team">
+      <h2>Away
+        <span id="awayPossession" class="possession-indicator">🏈</span>
+      </h2>
+      <div id="awayScore" class="score">0</div>
+      <div class="score-buttons">
+        <button onclick="addPoints('away', 1)">+1</button>
+        <button onclick="addPoints('away', 2)">+2</button>
+        <button onclick="addPoints('away', 3)">+3</button>
+        <button onclick="addPoints('away', 6)">+6</button>
+        <button onclick="addPoints('away', -1)">-1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME INFO -->
+  <div class="game-info">
+    <div>
+      <div><strong>Down &amp; Distance</strong></div>
+      <div id="downDistance">1st &amp; 10</div>
+      <button onclick="nextDown()">Next Down</button>
+      <button onclick="resetDownDistance()">Reset Downs</button>
+    </div>
+    <div>
+      <div><strong>Ball On</strong></div>
+      <div id="ballOnText">Own 25</div>
+      <div class="small">(Offense drives left → right)</div>
+    </div>
+    <div>
+      <div><strong>Quarter &amp; Clock</strong></div>
+      <div id="quarterText">Q1</div>
+      <div class="clock-container">
+        <div class="clock-row">
+          <span id="clockText">15:00</span>
+          <div>
+            <button onclick="changeQuarter(1)">+Q</button>
+            <button onclick="changeQuarter(-1)">-Q</button>
+          </div>
+        </div>
+        <div class="clock-row">
+          <input
+            type="text"
+            id="clockInput"
+            value="15:00"
+            placeholder="MM:SS"
+            style="width:4.2rem;"
+          />
+          <button onclick="setClockFromInput()">Set Clock</button>
+        </div>
+      </div>
+      <div class="timeouts">
+        <div>
+          <span>Home TO:</span>
+          <span id="homeTOs">3</span>
+          <button onclick="takeTimeout('home')">TO (+15s)</button>
+        </div>
+        <div>
+          <span>Away TO:</span>
+          <span id="awayTOs">3</span>
+          <button onclick="takeTimeout('away')">TO (+15s)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIELD -->
+<div class="field-container">
+  <div class="endzone-strip left-ez">Home</div>
+  <div class="field" id="field">
+    <div class="yard-labels">
+      <span style="left:0%"></span>
+      <span style="left:10%">10</span>
+      <span style="left:20%">20</span>
+      <span style="left:30%">30</span>
+      <span style="left:40%">40</span>
+      <span style="left:50%">50</span>
+      <span style="left:60%">40</span>
+      <span style="left:70%">30</span>
+      <span style="left:80%">20</span>
+      <span style="left:90%">10</span>
+      <span style="left:100%"></span>
+    </div>
+    <div id="ballMarker" class="ball-marker"></div>
+    <div id="ltgMarker" class="ball-marker"></div>
+  </div>
+  <div class="endzone-strip right-ez">Away</div>
+</div>
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div>
+      <label>Set ball: <span class="small">(0 = Home GL, 100 = Away GL)</span></label>
+      <input type="number" id="setYardInput" min="0" max="100" value="25" />
+      <button onclick="setBall()">Set</button>
+      <button onclick="flipField()">Flip Direction</button>
+    </div>
+    <div>
+      <label>Apply play result (yards gained or lost):</label>
+      <input type="number" id="yardsInput" value="0" />
+      <button onclick="applyPlay()">Apply</button>
+      <button onclick="firstDown()">New 1st &amp; 10</button>
+    </div>
+    <div>
+      <label>Ball control / game:</label>
+      <button onclick="turnover()">Turnover</button>
+      <button onclick="resetGame()">Reset Game</button>
+      <div class="small" style="margin-top:0.4rem;">
+        Each play: −30s. Timeout: +15s and consume a timeout.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    const state = {
+      homeScore: 0,
+      awayScore: 0,
+      yardLine: 25,      // 0–100, offense moving 0 → 100
+      lineToGain: 35,    // yardLine + distance (capped at GL)
+      offenseIsHome: true,
+      down: 1,
+      distance: 10,
+      quarter: 1,
+      secondsLeft: 15 * 60,
+      homeTOs: 3,
+      awayTOs: 3
+    };
+
+    function handleEndOfQuarterIfNeeded() {
+      if (state.secondsLeft > 0) return;
+
+      // Clock is 0 → move to next quarter and show dialog for the quarter that just ended
+      const endedQuarter = state.quarter;
+      state.quarter = Math.min(state.quarter + 1, 5); // up to OT if you use Q5
+
+      // Reset clock and timeouts for new quarter
+      state.secondsLeft = 15 * 60;
+      if (state.quarter === 1 || state.quarter === 3) {
+        state.homeTOs = 3;
+        state.awayTOs = 3;
+      }
+
+      updateView();
+      showQuarterEndDialog(endedQuarter);
+    }
+
+
+    function showQuarterEndDialog(quarterNumber) {
+      const dlg = document.getElementById('quarterDialog');
+      const text = document.getElementById('quarterDialogText');
+      if (!dlg || !text) return;
+
+      const suffix = (q) => {
+        if (q === 1) return '1st';
+        if (q === 2) return '2nd';
+        if (q === 3) return '3rd';
+        return q + 'th';
+      };
+
+      text.textContent = 'End of ' + suffix(quarterNumber) + ' Quarter';
+      dlg.showModal();
+    }
+
+    function updatePossessionIndicators() {
+      const homeBall = document.getElementById('homePossession');
+      const awayBall = document.getElementById('awayPossession');
+
+      if (!homeBall || !awayBall) return;
+
+      if (state.offenseIsHome) {
+        homeBall.classList.add('active');
+        awayBall.classList.remove('active');
+      } else {
+        homeBall.classList.remove('active');
+        awayBall.classList.add('active');
+      }
+    }
+
+    function updateView() {
+      document.getElementById('homeScore').textContent = state.homeScore;
+      document.getElementById('awayScore').textContent = state.awayScore;
+
+      const downNames = ['1st', '2nd', '3rd', '4th'];
+      const dn = downNames[state.down - 1] || state.down + 'th';
+      document.getElementById('downDistance').textContent =
+        dn + ' & ' + state.distance;
+
+      document.getElementById('quarterText').textContent = 'Q' + state.quarter;
+
+      const clockStr = formatClock(state.secondsLeft);
+      document.getElementById('clockText').textContent = clockStr;
+      document.getElementById('clockInput').value = clockStr;
+
+      document.getElementById('homeTOs').textContent = state.homeTOs;
+      document.getElementById('awayTOs').textContent = state.awayTOs;
+
+      const ballOnText = computeBallOnText();
+      document.getElementById('ballOnText').textContent = ballOnText;
+
+      const field = document.getElementById('field');
+      const marker = document.getElementById('ballMarker');
+      const ltg = document.getElementById('ltgMarker');
+      const fieldWidth = field.clientWidth;
+
+      const ballX = yardToPixel(state.yardLine, fieldWidth);
+      marker.style.left = ballX + 'px';
+
+      const ltgX = yardToPixel(state.lineToGain, fieldWidth);
+      ltg.style.left = ltgX + 'px';
+
+      updatePossessionIndicators();
+    }
+
+    function formatClock(totalSeconds) {
+      if (totalSeconds < 0) totalSeconds = 0;
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      const ss = s < 10 ? '0' + s : s;
+      return m + ':' + ss;
+    }
+
+    function parseClock(str) {
+      const parts = str.split(':');
+      if (parts.length !== 2) return null;
+      const m = parseInt(parts[0], 10);
+      const s = parseInt(parts[1], 10);
+      if (Number.isNaN(m) || Number.isNaN(s) || m < 0 || s < 0 || s > 59) {
+        return null;
+      }
+      return m * 60 + s;
+    }
+
+    function setClockFromInput() {
+      const val = document.getElementById('clockInput').value.trim();
+      const secs = parseClock(val);
+      if (secs === null) {
+        alert('Clock must be in MM:SS, e.g. 12:34');
+        return;
+      }
+      state.secondsLeft = secs;
+      handleEndOfQuarterIfNeeded();
+      updateView();
+    }
+
+    function yardToPixel(yards, width) {
+      const pct = yards / 100;
+      return pct * width;
+    }
+
+    function computeBallOnText() {
+      const yardsFromHomeGL = state.yardLine;
+      const yardsFromAwayGL = 100 - state.yardLine;
+
+      const offenseOwnYds = state.offenseIsHome ? yardsFromHomeGL : yardsFromAwayGL;
+      const offenseOppYds = 100 - offenseOwnYds;
+
+      if (offenseOwnYds <= 50) {
+        return 'Own ' + offenseOwnYds;
+      } else {
+        return 'Opp ' + offenseOppYds;
+      }
+    }
+
+    function addPoints(team, pts) {
+      if (team === 'home') {
+        state.homeScore = Math.max(0, state.homeScore + pts);
+      } else {
+        state.awayScore = Math.max(0, state.awayScore + pts);
+      }
+      updateView();
+    }
+
+    function tickPlayClock() {
+      state.secondsLeft -= 30;
+      if (state.secondsLeft < 0) state.secondsLeft = 0;
+      handleEndOfQuarterIfNeeded();
+    }
+
+    function takeTimeout(team) {
+      if (team === 'home') {
+        if (state.homeTOs <= 0) return;
+        state.homeTOs -= 1;
+      } else {
+        if (state.awayTOs <= 0) return;
+        state.awayTOs -= 1;
+      }
+      state.secondsLeft += 15;
+      const maxQuarterSeconds = 15 * 60; // adjust if you change quarter length
+      if (state.secondsLeft > maxQuarterSeconds) {
+        state.secondsLeft = maxQuarterSeconds;
+      }
+      handleEndOfQuarterIfNeeded();
+      updateView();
+    }
+
+    function applyPlay() {
+      const yards = parseInt(document.getElementById('yardsInput').value, 10) || 0;
+      state.yardLine += yards;
+      if (state.yardLine < 0) state.yardLine = 0;
+      if (state.yardLine > 100) state.yardLine = 100;
+
+      tickPlayClock();
+
+      if (state.yardLine === 100 || state.yardLine === 0) {
+        const scoringTeam = state.offenseIsHome ? 'home' : 'away';
+        addPoints(scoringTeam, 6);
+        turnover();
+        state.yardLine = 25;
+        state.down = 1;
+        state.distance = 10;
+        updateLineToGain();
+      } else {
+        const positiveGain = yards > 0 ? yards : 0;
+        state.distance = Math.max(1, state.distance - positiveGain);
+        if (state.distance <= 1) {
+          firstDown();
+        } else {
+          nextDown(false);
+        }
+      }
+      updateView();
+    }
+
+    function updateLineToGain() {
+      const target = state.yardLine + state.distance;
+      state.lineToGain = Math.min(100, Math.max(0, target));
+    }
+
+    function nextDown(tickClock = false) {
+      state.down += 1;
+      if (tickClock) tickPlayClock();
+      if (state.down > 4) {
+        turnover();
+        state.down = 1;
+        state.distance = 10;
+        updateLineToGain();
+      }
+      updateView();
+    }
+
+    function firstDown() {
+      state.down = 1;
+      state.distance = 10;
+      updateLineToGain();
+      updateView();
+    }
+
+    function resetDownDistance() {
+      state.down = 1;
+      state.distance = 10;
+      updateLineToGain();
+      updateView();
+    }
+
+    function turnover() {
+      state.offenseIsHome = !state.offenseIsHome;
+      state.yardLine = 100 - state.yardLine;
+      state.down = 1;
+      state.distance = 10;
+      updateLineToGain();
+      updateView();
+    }
+
+    function changeQuarter(delta) {
+      const oldQuarter = state.quarter;
+      state.quarter += delta;
+      if (state.quarter < 1) state.quarter = 1;
+      if (state.quarter > 5) state.quarter = 5;
+
+      // Reset clock and timeouts as before
+      state.secondsLeft = 15 * 60;
+      if (state.quarter === 1 || state.quarter === 3) {
+        state.homeTOs = 3;
+        state.awayTOs = 3;
+      }
+
+      updateView();
+
+      // If we actually moved to a new quarter, show dialog
+      if (state.quarter !== oldQuarter) {
+        showQuarterEndDialog(oldQuarter);
+      }
+    }
+
+    function setBall() {
+      let y = parseInt(document.getElementById('setYardInput').value, 10);
+      if (Number.isNaN(y)) return;
+      if (y < 0) y = 0;
+      if (y > 100) y = 100;
+      state.yardLine = y;
+      updateLineToGain();
+      updateView();
+    }
+
+    function flipField() {
+      state.offenseIsHome = !state.offenseIsHome;
+      state.yardLine = 100 - state.yardLine;
+      updateLineToGain();
+      updateView();
+    }
+
+    function resetGame() {
+      state.homeScore = 0;
+      state.awayScore = 0;
+      state.yardLine = 25;
+      state.offenseIsHome = true;
+      state.down = 1;
+      state.distance = 10;
+      state.quarter = 1;
+      state.secondsLeft = 15 * 60;
+      state.homeTOs = 3;
+      state.awayTOs = 3;
+      state.lineToGain = state.yardLine + state.distance;
+      updateView();
+    }
+
+    window.addEventListener('load', updateView);
+  </script>
+</body>
+</html>
