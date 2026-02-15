@@ -446,6 +446,14 @@
     </div>
   </div>
 
+  <div>
+  <label>Punt (yards):</label>
+  <div class="yardage-controls">
+    <input type="number" id="puntYardsInput" value="40" />
+    <button type="button" class="big-touch" onclick="punt()">Punt</button>
+  </div>
+</div>
+
   <script>
     // State
     const state = {
@@ -468,6 +476,35 @@
   if (Number.isNaN(val)) val = 0;
   val += delta;
   input.value = val;
+}
+
+function punt() {
+  const input = document.getElementById('puntYardsInput');
+  let yards = parseInt(input.value, 10);
+  if (Number.isNaN(yards) || yards < 0) yards = 0;
+
+  // Move ball in offense direction
+  if (state.offenseIsHome) {
+    state.yardLine += yards;
+  } else {
+    state.yardLine -= yards;
+  }
+
+  // Clamp to field
+  if (state.yardLine < 0) state.yardLine = 0;
+  if (state.yardLine > 100) state.yardLine = 100;
+
+  // Tick clock like a normal play (optional)
+  tickPlayClock();
+
+  // Change possession
+  turnover();
+
+  // After turnover, it's now 1st & 10 going the other way
+  state.down = 1;
+  state.distance = 10;
+  updateLineToGain();
+  updateView();
 }
 
     function handleEndOfQuarterIfNeeded() {
