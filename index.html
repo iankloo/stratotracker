@@ -257,6 +257,38 @@
 }
 
 
+.yardage-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.yardsInput,
+#yardsInput {
+  font-size: 1.2rem;
+  padding: 0.35rem 0.5rem;
+  width: 5rem;
+}
+
+.yardage-buttons,
+.yardage-apply {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.big-touch {
+  font-size: 1.1rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+}
+
+.big-touch.primary {
+  background: #2563eb;
+  color: #f9fafb;
+}
+
 
   </style>
 </head>
@@ -388,11 +420,22 @@
       <button onclick="flipField()">Flip Direction</button>
     </div>
     <div>
-      <label>Apply play result (yards gained or lost):</label>
-      <input type="number" id="yardsInput" value="0" />
-      <button onclick="applyPlay()">Apply</button>
-      <button onclick="firstDown()">New 1st &amp; 10</button>
-    </div>
+<label>Apply play result (yards gained or lost):</label>
+<div class="yardage-controls">
+  <input type="number" id="yardsInput" value="0" />
+
+  <div class="yardage-buttons">
+    <button type="button" class="big-touch" onclick="adjustYards(-5)">−5</button>
+    <button type="button" class="big-touch" onclick="adjustYards(-1)">−1</button>
+    <button type="button" class="big-touch" onclick="adjustYards(1)">+1</button>
+    <button type="button" class="big-touch" onclick="adjustYards(5)">+5</button>
+  </div>
+
+  <div class="yardage-apply">
+    <button type="button" class="big-touch primary" onclick="applyPlay()">Apply</button>
+    <button type="button" class="big-touch" onclick="firstDown()">New 1st &amp; 10</button>
+  </div>
+</div>    </div>
     <div>
       <label>Ball control / game:</label>
       <button onclick="turnover()">Turnover</button>
@@ -418,6 +461,14 @@
       homeTOs: 3,
       awayTOs: 3
     };
+
+    function adjustYards(delta) {
+  const input = document.getElementById('yardsInput');
+  let val = parseInt(input.value, 10);
+  if (Number.isNaN(val)) val = 0;
+  val += delta;
+  input.value = val;
+}
 
     function handleEndOfQuarterIfNeeded() {
       if (state.secondsLeft > 0) return;
