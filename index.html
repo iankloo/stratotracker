@@ -675,32 +675,42 @@ function punt() {
     }
 
     function applyPlay() {
-      const yards = parseInt(document.getElementById('yardsInput').value, 10) || 0;
-      state.yardLine += yards;
-      if (state.yardLine < 0) state.yardLine = 0;
-      if (state.yardLine > 100) state.yardLine = 100;
+  const yards = parseInt(document.getElementById('yardsInput').value, 10) || 0;
+  state.yardLine += yards;
+  if (state.yardLine < 0) state.yardLine = 0;
+  if (state.yardLine > 100) state.yardLine = 100;
 
-      tickPlayClock();
+  tickPlayClock();
 
-      if (state.yardLine === 100 || state.yardLine === 0) {
-        const scoringTeam = state.offenseIsHome ? 'home' : 'away';
-        addPoints(scoringTeam, 6);
-        turnover();
-        state.yardLine = 25;
-        state.down = 1;
-        state.distance = 10;
-        updateLineToGain();
-      } else {
-        const positiveGain = yards > 0 ? yards : 0;
-        state.distance = Math.max(1, state.distance - positiveGain);
-        if (state.distance <= 1) {
-          firstDown();
-        } else {
-          nextDown(false);
-        }
-      }
-      updateView();
+  if (state.yardLine === 100 || state.yardLine === 0) {
+    const scoringTeam = state.offenseIsHome ? 'home' : 'away';
+    addPoints(scoringTeam, 6);
+    turnover();
+    state.yardLine = 25;
+    state.down = 1;
+    state.distance = 10;
+    updateLineToGain();
+  } else {
+    // distance is absolute yards remaining to line to gain
+    // if yards > 0, you move closer; if yards < 0, you move farther away
+    state.distance = state.lineToGain - state.yardLine;
+
+    // If you want to allow “3rd & -2” when pushed back past the LTG:
+    // (This is what you asked for—negative distance when backed up beyond 10.)
+    // So DO NOT Math.max here; distance can go negative.
+    // If instead you want “3rd & 22”, then do:
+    // state.distance = Math.max(1, state.distance);
+
+    if (state.distance <= 0) {
+      // Reached or passed LTG -> first down
+      firstDown();
+    } else {
+      nextDown(false);
     }
+  }
+  updateView();
+}
+
 
     function updateLineToGain() {
       const target = state.yardLine + state.distance;
